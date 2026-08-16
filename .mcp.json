@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "CodeGraphContext": {
+      "command": "codegraphcontext",
+      "args": ["mcp", "start"]
+    }
+  }
+}
