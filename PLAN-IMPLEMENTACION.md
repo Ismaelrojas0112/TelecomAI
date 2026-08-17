@@ -170,6 +170,16 @@ git push -u origin main
 ```
 Después de esto: conectar el repo en Vercel, configurar `GEMINI_API_KEY` como variable de entorno del proyecto, deployar, y probar la URL pública — prestando especial atención a los dos riesgos ya conocidos (tiempo de cold start con el CSV de 60MB, consistencia de la sesión en memoria entre requests).
 
+**✅ Deployado y probado en producción:** `https://telecom-ai-seven.vercel.app` (proyecto `proyectos-ismael/telecom-ai`). El push a GitHub sí se completó en el primer intento (la advertencia de Git sobre `FACTURACION-CLIENTES.csv` > 50MB es solo eso, una advertencia — confirmado el archivo completo vía la API de GitHub, 62,572,254 bytes). El primer deploy falló por faltar `GEMINI_API_KEY` en las variables de entorno de Vercel (`.env.local` está en `.gitignore` a propósito, nunca llega a Vercel solo); se agregó a Production/Preview/Development y el siguiente deploy quedó "Ready".
+
+Probado en vivo contra la URL real:
+- Landing: 200 OK, <1s.
+- `/api/customers`: 5.2s en el primer request — cold start real parseando el CSV de 60MB, tal como se esperaba.
+- `/api/chat`, primer mensaje: 9s (cold start + 3 llamadas a Gemini: sentimiento, búsqueda vectorial, explicación), respuesta correcta y bien anclada.
+- `/api/chat`, segundo mensaje con el mismo `conversation_id`: **1.2s, la sesión en memoria sí persistió** — reconoció el turno de cierre y ofreció el cross-sell correcto. No es una garantía completa (dos requests seguidos probablemente cayeron en la misma instancia tibia; no prueba qué pasa con un hueco largo de inactividad o tráfico concurrente de varias personas), pero para el patrón de uso de una demo en vivo, funcionó.
+
+**Acceso Vercel vía CLI:** costó 3 intentos encontrar el tipo de token correcto — los primeros dos (prefijo `vcp_`) daban "User not found"/"token no válido" en distintos comandos, señal de que eran tokens de alcance limitado en vez de un Personal Access Token de cuenta completa; el tercero (generado desde Settings → Tokens con scope de cuenta completa) funcionó. Proyecto ya vinculado (`vercel link`), se puede usar `npx vercel env ls/add`, `vercel ls`, `vercel logs`, etc. para lo que haga falta de acá al pitch.
+
 **Documentación actualizada para reflejar el estado real:** [FUNCIONALIDADES.md](./FUNCIONALIDADES.md), [FRONTEND.md](./FRONTEND.md) (reescrito — ya no es spec para construir, describe el frontend adoptado tal como quedó), [FLUJO-INFORMACION.md](./FLUJO-INFORMACION.md), [PRD.md](./PRD.md) e [INVESTIGACION-DESAFIO1.md](./INVESTIGACION-DESAFIO1.md). Nuevos, para el pitch: [FLUJO-BOT-MERMAID.md](./FLUJO-BOT-MERMAID.md) (diagrama as-built completo), [CONTENIDO-PPT.md](./CONTENIDO-PPT.md) (contenido diapositiva por diapositiva) y [PITCH.md](./PITCH.md) (guion hablado, ~4 min, con las cuentas de demo a usar).
 
 ## Definición de "hecho" (checklist antes del pitch)
@@ -184,6 +194,6 @@ Después de esto: conectar el repo en Vercel, configurar `GEMINI_API_KEY` como v
 - [x] Se puede entrar con un ID desde la landing y llega ya cargado a `/dashboard` o `/whatsapp`, saltando la verificación falsa — probado por `tsc`/API, falta pase visual en navegador.
 - [x] Capa vectorial de conceptos activa — los 12 archivos de `concepts/` alimentan al bot (3 por mapeo directo, 9 por búsqueda semántica). Probado en vivo con 3 conceptos antes inertes.
 - [x] Cuota de Gemini resuelta — facturación activa en `GEMINI_API_KEY`, ya no depende de rotación entre keys del free tier.
-- [ ] **Pase visual completo en navegador real** de las 3 superficies (landing, dashboard, whatsapp) — todo lo de esta sesión se probó por `curl`/`tsc`/lectura de código, nunca se abrió en un navegador de verdad. Es el hueco de verificación más grande ahora mismo.
-- [ ] La app está deployada en una URL pública y se probó ahí — **bloqueado en el primer paso:** el `git commit`/`push` al repo lo rechazó el clasificador de permisos del entorno, hay que correrlo a mano (comandos exactos arriba, en "Ronda extra 3").
+- [x] La app está deployada en una URL pública y se probó ahí — `https://telecom-ai-seven.vercel.app`, probado de punta a punta (ver "Ronda extra 3").
+- [ ] **Pase visual completo en navegador real** de las 3 superficies (landing, dashboard, whatsapp), en local **y** en la URL de producción — todo lo probado hasta ahora fue por `curl`/`tsc`/lectura de código, nunca se abrió en un navegador de verdad. Es el único hueco de verificación grande que queda.
 - [ ] Plan B visual si Gemini falla en pleno pitch (screenshot/video de respaldo) — menos urgente ahora que hay facturación activa, pero sigue siendo buena práctica tenerlo.

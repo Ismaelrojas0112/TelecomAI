@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowRight, BadgeCheck, CheckCircle2, FileCheck2, Home, LogOut, Menu, MessageCircleMore, ReceiptText, RefreshCw, Search, ShieldCheck, Sparkles, X } from "lucide-react";
 import { Badge, Button, Card } from "./ui";
-import { Chat } from "./Chat";
 import { clearDemoSession } from "../lib/demo-session";
 
 type Customer = { customer_key: string; display_name: string; demo_phone: string; scenario: string; cause_label: string; variation: string };
@@ -105,7 +104,7 @@ export function BillingDashboard() {
       <nav aria-label="Navegación principal">
         <a className="nav-item active" href="#resumen"><Home size={19} /> Resumen</a>
         <a className="nav-item" href="#causas"><ReceiptText size={19} /> Mi recibo</a>
-        <a className="nav-item" href="#chat"><MessageCircleMore size={19} /> Conversación</a>
+        <Link className="nav-item" href={`/dashboard/chat?customer_key=${encodeURIComponent(customerKey)}`}><MessageCircleMore size={19} /> Conversación</Link>
         <Link className="nav-item" href="/whatsapp"><MessageCircleMore size={19} /> Demo WhatsApp</Link>
       </nav>
       <div className="sidebar-trust"><ShieldCheck size={19} /><div><strong>Datos demo protegidos</strong><span>Sin PII en el navegador</span></div></div>
@@ -157,7 +156,7 @@ export function BillingDashboard() {
             <p className="hero-kicker">RESPUESTA PRINCIPAL · {analysis.ciclo_actual}</p>
             <h2 className="change-answer">Tu recibo {variation >= 0 ? "subió" : "bajó"} <span>{money(variation)}</span> por {primaryCause?.tipo.replaceAll("_", " ").toLowerCase() ?? "cambios verificados"}.</h2>
             <p className="hero-summary">Comparamos seis ciclos y encontramos <strong>{analysis.causas.length} {analysis.causas.length === 1 ? "causa respaldada" : "causas respaldadas"}</strong>. El cambio cuadra con los registros del recibo.</p>
-            <div className="hero-actions-dashboard"><Button onClick={() => document.querySelector("#causas")?.scrollIntoView({ behavior: "smooth" })}>Ver evidencia <ArrowRight size={17} /></Button><button onClick={() => document.querySelector("#chat")?.scrollIntoView({ behavior: "smooth" })}>Conversar con ClarIA</button></div>
+            <div className="hero-actions-dashboard"><Button onClick={() => document.querySelector("#causas")?.scrollIntoView({ behavior: "smooth" })}>Ver evidencia <ArrowRight size={17} /></Button><Link href={`/dashboard/chat?customer_key=${encodeURIComponent(customerKey)}`}>Consultar recibo</Link></div>
           </div>
           <div className="reconcile-card">
             <p className="receipt-total-label">TOTAL DEL RECIBO</p><div className="amount">S/{current.toFixed(0)}<span>.{current.toFixed(2).split(".")[1]}</span></div>
@@ -182,8 +181,10 @@ export function BillingDashboard() {
         </section>
 
         <section className="chat-section" id="chat">
-          <div className="chat-intro"><span className="ai-orb"><Sparkles /></span><p className="eyebrow">MOTOR OMNICANAL</p><h2>Pregunta por este recibo</h2><p>Este mismo componente y contrato se usan en la experiencia WhatsApp. Las acciones, ofertas y derivación vienen decididas por el backend.</p></div>
-          <Chat key={customerKey} customerKey={customerKey} displayName={displayName} autoStart />
+          <div className="chat-intro"><span className="ai-orb"><Sparkles /></span><p className="eyebrow">MOTOR OMNICANAL</p><h2>Pregunta por este recibo</h2><p>Abrí la conversación con ClarIA en una pantalla dedicada, con tu recibo y sus gráficos siempre a la vista al lado del chat — nada de bajar y subir la página.</p></div>
+          <Link href={`/dashboard/chat?customer_key=${encodeURIComponent(customerKey)}`} className="button" style={{ justifySelf: "start" }}>
+            <MessageCircleMore size={17} /> Consultar recibo con ClarIA <ArrowRight size={16} />
+          </Link>
         </section>
         </>}
       </div>
