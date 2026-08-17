@@ -21,7 +21,11 @@ export function classifyFollowUp(message: string): FollowUpIntent {
   }
 
   if (
-    /^(gracias|muchas gracias|listo|entendido|ok|okay|perfecto|genial|ya entend|excelente|de acuerdo|vale|okey)\b/.test(
+    // Sin anclar al inicio (\b en vez de ^): "entendí todo, muchas gracias"
+    // no empieza con ninguna de estas palabras, pero sigue siendo un cierre
+    // claro. "no entend..."/"no entiendo" ya se descartó arriba como
+    // "confundido", así que "entend\w*" acá no choca con esos casos.
+    /\b(gracias|listo|entend\w*|ok(ay)?|okey|perfecto|genial|de acuerdo|vale|excelente)\b/.test(
       lower
     )
   ) {
