@@ -32,7 +32,17 @@ export function WhatsAppDemo() {
   const chatDisplayName = matchedCustomer?.display_name ?? `Cliente ${customerKey}`;
   const pitchCustomers = customers.filter((item) => item.customer_key !== "CUST-DEMO-001");
 
-  useEffect(() => { fetch("/api/customers").then((response) => response.ok ? response.json() : fallback).then((data: Customer[]) => Array.isArray(data) && data.length && setCustomers(data)).catch(() => undefined); }, []);
+  useEffect(() => {
+    fetch("/api/customers").then((response) => response.ok ? response.json() : fallback).then((data: Customer[]) => {
+      if (!Array.isArray(data) || !data.length) return;
+      setCustomers(data);
+      // Sin esto, si nadie toca el selector, customerKey se queda pegado en
+      // el ID de relleno (CUST-DEMO-RECON) — la verificación pasa igual
+      // porque "customer" ya cae al primero real, pero el chat termina
+      // pidiéndole a /api/chat una cuenta que no existe.
+      setCustomerKey((current) => (directCustomerKey || data.some((item) => item.customer_key === current)) ? current : data[0].customer_key);
+    }).catch(() => undefined);
+  }, [directCustomerKey]);
   const verify = (event: FormEvent) => {
     event.preventDefault();
     const normalized = phone.replace(/\D/g, "");
