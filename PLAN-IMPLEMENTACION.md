@@ -161,14 +161,15 @@ Probado en vivo contra el endpoint real con preguntas de 3 conceptos antes inert
 
 **Vercel vs. Cloud Run.** Se evaluó Cloud Run como alternativa — es viable (Next.js soporta `output: "standalone"`, Cloud Run puede construir directo desde el código fuente) y con `min-instances: 1` mitigaría los dos riesgos de despliegue mencionados arriba (CSV de 60MB parseado una sola vez, sesión en memoria persistente de forma confiable), a cambio de pagar por una instancia siempre activa en vez de escalar a cero. Decisión: arrancar por Vercel (más simple, más rápido a una URL pública) usando el repo `https://github.com/Ismaelrojas0112/TelecomAI.git`; Cloud Run queda como opción documentada si hace falta más adelante.
 
-**🚧 Bloqueado: primer commit + push al repo.** Se conectó el remoto (`git remote add origin ...`) y se armó el commit (60 archivos, todo el build de este proyecto — nunca se había subido nada más allá del scaffold inicial de `create-next-app`). Tanto `git commit` como `git push` fueron rechazados por el clasificador de permisos automático del entorno (acción "denied by the Claude Code auto mode classifier" — bloquea proactivamente operaciones de git que tocan estado compartido/remoto). **Sigue pendiente que el usuario corra esto manualmente** (o ajuste el permiso de Bash para permitirlo):
+**✅ Primer commit + push — resuelto.** El primer intento (60 archivos, todo el build) lo rechazó el clasificador de permisos del entorno; lo corrió el usuario a mano y quedó en GitHub. Confirmado además: **el pipeline de auto-deploy funciona de punta a punta** — un `git push` normal a `main` (probado con el commit de la pantalla de consulta) dispara solo un build nuevo en Vercel, y en ~20s queda "Ready" y visible en la URL pública, sin tocar nada en el dashboard de Vercel.
+
+Comandos de referencia si hay que repetirlo a mano:
 ```
-git remote add origin https://github.com/Ismaelrojas0112/TelecomAI.git   # ya se corrió una vez, puede fallar con "already exists" — ok
+git remote add origin https://github.com/Ismaelrojas0112/TelecomAI.git   # ya está, puede fallar con "already exists" — ok
 git add -A
-git commit -m "Build completo del MVP: diff engine, RAG en 2 capas, gate de sentimiento y frontend"
-git push -u origin main
+git commit -m "..."
+git push origin main
 ```
-Después de esto: conectar el repo en Vercel, configurar `GEMINI_API_KEY` como variable de entorno del proyecto, deployar, y probar la URL pública — prestando especial atención a los dos riesgos ya conocidos (tiempo de cold start con el CSV de 60MB, consistencia de la sesión en memoria entre requests).
 
 **✅ Deployado y probado en producción:** `https://telecom-ai-seven.vercel.app` (proyecto `proyectos-ismael/telecom-ai`). El push a GitHub sí se completó en el primer intento (la advertencia de Git sobre `FACTURACION-CLIENTES.csv` > 50MB es solo eso, una advertencia — confirmado el archivo completo vía la API de GitHub, 62,572,254 bytes). El primer deploy falló por faltar `GEMINI_API_KEY` en las variables de entorno de Vercel (`.env.local` está en `.gitignore` a propósito, nunca llega a Vercel solo); se agregó a Production/Preview/Development y el siguiente deploy quedó "Ready".
 
